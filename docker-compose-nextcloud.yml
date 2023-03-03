@@ -1,0 +1,84 @@
+version: '3'
+
+services:
+  db:
+    env_file:
+        - .env
+    image: mariadb
+    container_name: mariadb
+    restart: always
+    environment:
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - ./data/db:/var/lib/mysql
+    networks:
+      - default
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: always
+    networks:
+      - default
+
+  nextcloud:
+    build: ./nextcloud/
+    container_name: nextcloud
+    restart: always
+    depends_on:
+      - db
+      - traefik
+      - redis
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - TRUSTED_PROXIES=172.18.0.3/16
+      - OVERWRITEPROTOCOL=https
+      - REDIS_HOST=redis
+    volumes:
+      - ./data/nextcloud:/var/www/html
+    networks:
+      - proxy
+      - default
+    labels:
+      # enable traefik for this container
+      - traefik.enable=true
+      # create a middleware for whoami to redirect traffic to https
+      - traefik.http.middlewares.nextcloud-https.redirectscheme.scheme=https
+      # create a router called nextcloud-http to listen on the entrypoint for http/80. 
+      - traefik.http.routers.nextcloud-http.entrypoints=web
+      # set the domainname for the site on router nextcloud-http. It listens on http/80
+      - traefik.http.routers.nextcloud-http.rule=Host(`${NEXTCLOUD_URL}`)
+      # route traffic from nextcloud-http to nextcloud-https middleware
+      - traefik.http.routers.nextcloud-http.middlewares=nextcloud-https@docker
+      # setup the entrypoint for https/443. Create a router called nextcloud.
+      - traefik.http.routers.nextcloud.entrypoints=websecure
+      # define the domainname for this route. It listens on https/443
+      - traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_URL}`)
+      # use tls
+      - traefik.http.routers.nextcloud.tls=true
+      # use this if you have setup LetsEncrypt
+      - traefik.http.routers.nextcloud.tls.certresolver=letsencrypt
+      # inform traefik about the network it should listen on- useful if you have more than one networks for your container
+      - traefik.http.routers.nextcloud.middlewares=nextcloud_redirectregex
+      - traefik.http.middlewares.nextcloud_redirectregex.redirectregex.permanent=true
+      - traefik.http.middlewares.nextcloud_redirectregex.redirectregex.regex='https://(.*)/.well-known/(?:card|cal)dav'
+      - traefik.http.middlewares.nextcloud_redirectregex.redirectregex.replacement='https://$${1}/remote.php/dav' 
+      # rewrite caldav urls
+      - traefik.http.routers.nextcloud.middlewares=nextcloud-caldav@docker,testHeader
+      - traefik.http.middlewares.nextcloud-caldav.redirectregex.permanent=true
+      - traefik.http.middlewares.nextcloud-caldav.redirectregex.regex=^https://(.*)/.well-known/(card|cal)dav
+      - traefik.http.middlewares.nextcloud-caldav.redirectregex.replacement=https://$${1}/remote.php/dav/
+      # set sts header
+      - traefik.http.middlewares.testHeader.headers.stsSeconds=15552000
+      # setup correct docker network
+      - traefik.docker.network=proxy
+
+networks:
+  proxy:
+    external: true

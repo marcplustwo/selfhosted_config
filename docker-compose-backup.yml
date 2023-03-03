@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  backup:
+    build: ./backup/
+    env_file:
+      - .env
+    container_name: backup
+    restart: always
+    volumes:
+      - "./data/nextcloud:/data/nextcloud"
+      - "./data/db:/data/db"
+      - ".ssh:/secrets/.ssh"
