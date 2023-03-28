@@ -9,6 +9,7 @@ services:
     restart: always
     command:
       - "--api.insecure=false"
+      - "--accesslog.filepath=/access.log"
       - "--log.filepath=/traefik.log"
       - "--log.level=DEBUG"
       - "--providers.docker=true"
