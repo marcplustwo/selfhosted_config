@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  imgpush:
+    image: hauxir/imgpush:latest
+    container_name: imgpush
+    restart: always
+    volumes:
+      - "./data/images:/images"
+    environment:
+      - MAX_UPLOADS_PER_DAY=1000
+      - MAX_UPLOADS_PER_HOUR=400
+      - ALLOWED_ORIGINS=["*"]
+      - NAME_STRATEGY=uuidv4
