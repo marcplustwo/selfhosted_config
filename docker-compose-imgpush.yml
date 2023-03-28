@@ -19,6 +19,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.imgpush.rule=Host(`${SERVICE_URL}`) && PathPrefix(`/${SERVICE_PATH_IMGPUSH}`)"
+      - "traefik.http.routers.imgpush.middlewares=imgpush-stripprefix"
+      - "traefik.http.middlewares.portainer-stripprefix.stripprefix.prefixes=/${SERVICE_PATH_IMGPUSH}"
       - "traefik.http.routers.imgpush.entrypoints=websecure"
       - "traefik.http.routers.imgpush.tls=true"
       - "traefik.http.routers.imgpush.tls.certresolver=letsencrypt"
