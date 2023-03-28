@@ -4,6 +4,8 @@ services:
   imgpush:
     image: hauxir/imgpush:latest
     container_name: imgpush
+    env_file:
+        - .env
     restart: always
     volumes:
       - "./data/images:/images"
@@ -12,3 +14,8 @@ services:
       - MAX_UPLOADS_PER_HOUR=400
       - ALLOWED_ORIGINS=["*"]
       - NAME_STRATEGY=uuidv4
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.imgpush.rule=Host(`${SERVICE_URL}`) && PathPrefix(`/${SERVICE_PATH_IMGPUSH}`)"
+      - "traefik.http.routers.imgpush.entrypoints=https"
+      - "traefik.http.routers.imgpush.tls=true"
