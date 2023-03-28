@@ -4,6 +4,8 @@ services:
   imgpush:
     image: hauxir/imgpush:latest
     container_name: imgpush
+    depends_on:
+      - traefik
     env_file:
         - .env
     restart: always
