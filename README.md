@@ -39,4 +39,8 @@ MYSQL_ROOT_PASSWORD=
 
 # backup
 BACKUP_TARGET=user@host:backup_directory/
+
+# imgpush
+SERVICE_URL=
+SERVICE_PATH_IMGPUSH=
 ```
