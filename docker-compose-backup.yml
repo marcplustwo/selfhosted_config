@@ -8,6 +8,5 @@ services:
     container_name: backup
     restart: always
     volumes:
-      - "./data/nextcloud:/data/nextcloud"
-      - "./data/db:/data/db"
+      - "./data:/data"
       - ".ssh:/secrets/.ssh"
