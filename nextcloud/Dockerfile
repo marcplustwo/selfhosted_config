@@ -7,6 +7,8 @@ RUN apt-get update && apt-get install -y \
 
 COPY supervisord.conf /
 
+RUN echo '0 3 * * * /usr/local/bin/php /var/www/nextcloud/occ preview:pre-generate' >> /var/spool/cron/crontabs/www-data 
+
 ENV NEXTCLOUD_UPDATE=1
 
 CMD ["/usr/bin/supervisord", "-c", "/supervisord.conf"]
